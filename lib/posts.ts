@@ -6,7 +6,13 @@ import html from 'remark-html'
 
 const postsDirectory = path.join(process.cwd(), 'posts')
 
-export function getSortedPostsData() {
+export type PostData = {
+  id: string
+  title: string
+  date: string
+}
+
+export function getSortedPostsData(): PostData[] {
   // Get file names under /posts
   const fileNames = fs.readdirSync(postsDirectory)
   const allPostsData = fileNames.map(fileName => {
@@ -24,7 +30,7 @@ export function getSortedPostsData() {
     return {
       id,
       ...matterResult.data
-    }
+    } as PostData
   })
   // Sort posts by date
   return allPostsData.sort((a, b) => {
@@ -36,7 +42,13 @@ export function getSortedPostsData() {
   })
 }
 
-export function getAllPostIds() {
+export type PostIdParam = {
+  params: {
+    id: string
+  }
+}
+
+export function getAllPostIds(): PostIdParam[] {
   const fileNames = fs.readdirSync(postsDirectory)
 
   // Returns an array that looks like this:
@@ -61,7 +73,11 @@ export function getAllPostIds() {
   })
 }
 
-export async function getPostData(id) {
+export type PostDataWithContent = PostData & {
+  contentHtml: string
+}
+
+export async function getPostData(id: string): Promise<PostDataWithContent> {
   const fullPath = path.join(postsDirectory, `${id}.md`)
   const fileContents = fs.readFileSync(fullPath, 'utf8')
 
@@ -70,8 +86,8 @@ export async function getPostData(id) {
 
   // Use remark to convert markdown into HTML string
   const processedContent = await remark()
-    .use(html)
-    .process(matterResult.content)
+  .use(html)
+  .process(matterResult.content)
   const contentHtml = processedContent.toString()
 
   // Combine the data with the id and contentHtml
@@ -79,5 +95,5 @@ export async function getPostData(id) {
     id,
     contentHtml,
     ...matterResult.data
-  }
+  } as PostDataWithContent
 }
